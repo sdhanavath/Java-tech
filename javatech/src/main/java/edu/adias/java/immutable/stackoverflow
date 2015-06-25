@@ -1,0 +1,152 @@
+----------
+## Objective ##
+Helps in understanding the process of converting the mutable objects to immutable objects in Java..
+###Problem###
+I have an existing mutable object called Person and would like to make it immutable;
+
+     public class Person {
+    	private String name;
+    	private Date joiningDate;
+    	
+    	public Person(String name,Date joiningDate){
+    		this.name=name;
+    		this.joiningDate=joiningDate;
+    	}
+    	public String getName() {
+    		return name;
+    	}	
+    	public void setName(String name){
+    		this.name=name;
+    	}
+    	public Date getJoiningDate() {
+    		return joiningDate;
+    	}	
+    	public void setJoiningDate(Date joiningDate){
+    		this.joiningDate=joiningDate;
+    	}	
+    	@Override
+    	public String toString() {
+    		return "Person [name=" + name + ", joiningDate=" + joiningDate + "]";
+    	}
+    }
+
+        public class ImmutableDemo {
+    public static void main(String[] args){
+    		Person p=new Person("Saida",new Date());
+    		System.out.println("Original Person:"+p);
+    		p.setName("Nagaraj");
+    		Date joiningDate=p.getJoiningDate();
+    		joiningDate.setDate(26);
+    		System.out.println("Updated Person:"+p);
+    	}
+    }
+
+![enter image description here][1]
+
+####Comments####
+After seeing the above results, it is clear that the Person object is not immutable,
+because was able to change both name and joiningDate fields. 
+Now, the actual need comes, which is how to make Person object to immutable.
+
+###Propositions###
+**Rules for making objects immutable in Java:**
+
+
+Rule#1:Make all fields final and private.
+
+Rule#2:Don't provide "setter" methods = methods that modify fields or objects referred to by fields.
+
+Rule#3:Don't allow subclasses to override methods. The simplest way to do this is to declare the class as final.
+
+**After applying above three rules - code changes as shown below**
+
+        public final class Person {
+    	final private String name;
+    	final private Date joiningDate;
+    	public Person(String name,Date joiningDate){
+    		this.name=name;
+    		this.joiningDate=joiningDate;
+    	}
+    	public String getName() {
+    		return name;
+    	}
+    	public Date getJoiningDate() {
+    		return joiningDate;
+    	}
+    	@Override
+    	public String toString() {
+    		return "hashCode-->"+this.hashCode()+"\tPerson [name=" + name + ", joiningDate=" + joiningDate + "]";
+    	}
+    }
+
+    public class ImmutableDemo {
+    public static void main(String[] args){
+    		Person p=new Person("Saida",new Date());
+    		System.out.println("Original Person:"+p);
+    		//str is a local variable no links with name field of Person object, 
+    		//so even though you make updates to local variable it has no impact to  the Person object
+    		String str=p.getName();
+    		// You can do whatever, it has no impact with name field of Person object, 
+    		//verify the output section for results
+    		str="Nagaraj";
+    		Date joiningDate=p.getJoiningDate();
+    		joiningDate.setDate(26);
+    		System.out.println("Updated Person:"+p);
+    	}
+    }
+
+![enter image description here][2]
+####Comments####
+Even after applying above 3 rules Person object is still not immutable as per the above output 
+
+Rule#4: If the instance fields include references to mutable objects, don't allow those objects to be changed:<br>
+        in this case we have two fields<br>
+        name:String -- String is immutable so there is no problem with name field<br>
+        joinigDate:Date -- java.util.Date is a mutable object, thats' the reason we are able to modify joiningDate as shown above<br>
+
+ Now, how to tackle this situation:<br>
+<p>
+        #1#: Don't provide methods that modify the mutable objects.<br>
+          meaning, removing the getJoiningDate() of Person will solve the problem,<br> but
+          what if there is a need to keep the getJoiningDate() for the client programs to access the information and after all it's getter method<br>
+          ----<br>
+          ----<br>
+          let's do this....<br>
+</p>
+<p>
+#2#: Don't share references to the mutable objects.
+         meaning, change the return type of getJoiningDate() method to maybe to String 
+         //so, String is immutable
+         String joiningDate=p.getJoiningDate();<br>
+         
+         ----<br>
+         ----<br>
+         But, if you do not want to do any changes to getter method signature...
+         what else can be done....<br>
+
+</p>
+<p>
+ #3#: Never store references to external, mutable objects passed to the constructor;<br>
+         if necessary, create copies, and store references to the copies. Similarly, <br>
+         create copies of your internal mutable objects when necessary to avoid returning the originals in your methods.<br>
+</p>
+
+    so, Person class getJoiningDate() becomes as shown below
+        //clone
+        public Date getJoiningDate() {
+    		return (Date)joiningDate.clone();
+    	}
+    			(or)
+    	//copy via constructor
+    	 public Date getJoiningDate() {
+    		return new Date(originalDate.getTime());
+    	}
+
+![enter image description here][3]
+
+Thanks for reading this post!!!<br>
+**Feel free put your comments!!!**
+
+  [1]: http://i.stack.imgur.com/QeeaM.png
+  [2]: http://i.stack.imgur.com/Um2dS.png
+  [3]: http://i.stack.imgur.com/SNpO3.png
